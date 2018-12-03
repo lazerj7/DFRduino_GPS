@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map Motor_IMU_Shield
+# Syntax Coloring Map DFRduino_GPS
 #######################################
 
 #######################################
@@ -12,6 +12,7 @@ DFRduino_GPS	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+begin	KEYWORD2
 update	KEYWORD2
 
 #######################################
@@ -31,3 +32,5 @@ altitude	LITERAL1
 groundSpeed	LITERAL1
 heading	LITERAL1
 verticalVelocity	LITERAL1
+horizontalAccuracy	LITERAL1
+verticalAccuracy	LITERAL1

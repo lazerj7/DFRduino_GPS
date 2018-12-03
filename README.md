@@ -1,6 +1,6 @@
 # DFRduino_GPS
 
-This library interfaces an arduino with the DFRobot DFRduino LEA-5H GPS shield using I2C. Latitude, Longitude, Altitude,  Ground Speed, Heading, and Vertical Velocity are all reported as doubles. Data validity is checked based on user supplied minimum horizontal and vertical accuracies (in meters).
+This library interfaces an arduino with the DFRobot DFRduino LEA-5H GPS shield using softwareSerial. Latitude, Longitude, Altitude,  Ground Speed, Heading, Vertical Velocity, Horizontal Accuracy, and Vertical Accuracy are all reported as doubles. Data validity is checked based on user supplied minimum horizontal and vertical accuracies (in meters).
 
 ## Contents
 
@@ -103,49 +103,63 @@ This library interfaces an arduino with the DFRobot DFRduino LEA-5H GPS shield u
 
   ```cpp
   #include <DFRduino_GPS.h>
-
-  //Create an instance of the GPS Shield
-  //Arguments are (double <minimum horizontal accuracy>, double <minimum vertical accuracy>)
-  //Accuracies are in meters
-  DFRduino_GPS gps(10.0, 10.0);
   
+  /*
+   * Create an instance of the GPS Shield
+   * Arguments are (int receive_pin, int transmit_pin)
+   * Uses software serial so ensure pins support pin change interrupts
+   */
+  DFRduino_GPS gps(10, 11);
+   
   void setup() {
-    Serial.begin(9600);
+       /*
+   	* Initialize GPS
+   	* Arguments are (double horizontal_accuracy, double vertical_accuracy)
+   	* representing minimum accuracy (in meters) that will be considered valid
+   	*/
+  	gps.begin(10.0, 10.0);
+  	Serial.begin(9600);
   }
   
   void loop() {
-    if (gps.update()) {
-      Serial.print("latitude: ");
-      Serial.println(gps.latitude);
-      Serial.print("longitude: ");
-      Serial.println(gps.longitude);
-      Serial.print("altitude: ");
-      Serial.println(gps.altitude);
-      Serial.print("ground speed: ");
-      Serial.println(gps.groundSpeed);
-      Serial.print("heading: ");
-      Serial.println(gps.heading);
-      Serial.print("vertical velocity: ");
-      Serial.println(gps.verticalVelocity);
-      Serial.print("horizontal accuracy: ");
-      Serial.println(gps.horizontalAccuracy);
-      Serial.print("vertical accuracy: ");
-      Serial.println(gps.verticalAccuracy);
-      Serial.println();
-      Serial.println();
-      Serial.println();
-    }
-    delay(1000);
+	if (gps.update()) {
+		Serial.print("latitude: ");
+		Serial.println(gps.latitude);
+    		Serial.print("longitude: ");
+    		Serial.println(gps.longitude);
+    		Serial.print("altitude: ");
+    		Serial.println(gps.altitude);
+    		Serial.print("ground speed: ");
+    		Serial.println(gps.groundSpeed);
+    		Serial.print("heading: ");
+    		Serial.println(gps.heading);
+    		Serial.print("vertical velocity: ");
+    		Serial.println(gps.verticalVelocity);
+    		Serial.print("horizontal accuracy: ");
+    		Serial.println(gps.horizontalAccuracy);
+    		Serial.print("vertical accuracy: ");
+    		Serial.println(gps.verticalAccuracy);
+    		Serial.println();
+    		Serial.println();
+    		Serial.println();
+  	}
+  	delay(1000);
   }
   ```
 
 ### Library Functions And Variables
 
 * ```cpp
-  DFRduino_gps <name>(double horizontal_accuracy, double vertical_accuracy);
+  DFRduino_gps <name>(int receivePin, int transmitPin);
   ```
 
-  Creates an instance of the GPS Shield. <name> is the name of the variable you will use to refer to the new instance. Takes two arguments, representing the minimum horizontal and vertical accuracies to be considered valid GPS data (in meters).
+  Creates an instance of the GPS Shield. <name> is the name of the variable you will use to refer to the new instance. Takes two arguments, representing the receive and transmit pins to use for softwareSerial communication. Note that these pins must support pin change interrupts.
+
+* ```cpp
+  void begin(double horizontalAccuracy, double verticalAccuracy);
+  ```
+
+  Initializes the GPS Shield. Takes two arguments, representing the minimum horizontal and vertical accuracies (in meters) that will be considered valid. If GPS fix reports accuracies greater than these values, it will be regarded as an invalid fix.
   
 * ```cpp
   boolean update();
@@ -166,6 +180,8 @@ This library interfaces an arduino with the DFRobot DFRduino LEA-5H GPS shield u
   double groundSpeed;
   double heading;
   double verticalVelocity;
+  double horizontalAccuracy;
+  double verticalAccuracy;
   ```
   
-  Double variables representing latitude, longitude, altitude, ground speed, heading, and vertical velocity respectively. Updated with update(). Validity of these variables indicated by valid.
+  Double variables representing latitude, longitude, altitude, ground speed, heading, vertical velocity, horizontal accuracy, and vertical accuracy respectively. Updated with update(). Validity of these variables indicated by valid.
