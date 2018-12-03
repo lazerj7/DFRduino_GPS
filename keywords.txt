@@ -1,0 +1,33 @@
+#######################################
+# Syntax Coloring Map Motor_IMU_Shield
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DFRduino_GPS	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+update	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+
+
+#######################################
+# Library Variables (LITERAL1)
+#######################################
+
+valid	LITERAL1
+latitude	LITERAL1
+longitude	LITERAL1
+altitude	LITERAL1
+groundSpeed	LITERAL1
+heading	LITERAL1
+verticalVelocity	LITERAL1
