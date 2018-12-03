@@ -141,25 +141,25 @@ This library interfaces an arduino with the DFRobot DFRduino LEA-5H GPS shield u
 
 ### Library Functions And Variables
 
-  ```cpp
+* ```cpp
   DFRduino_gps <name>(double horizontal_accuracy, double vertical_accuracy);
   ```
 
-Creates an instance of the GPS Shield. <name> is the name of the variable you will use to refer to the new instance. Takes two arguments, representing the minimum horizontal and vertical accuracies to be considered valid GPS data (in meters).
+  Creates an instance of the GPS Shield. <name> is the name of the variable you will use to refer to the new instance. Takes two arguments, representing the minimum horizontal and vertical accuracies to be considered valid GPS data (in meters).
   
-  ```cpp
+* ```cpp
   boolean update();
   ```
+    
+  Updates GPS data. Returns true if data was updated, or false if data was not updated, either due to no new data being available or due to new data not meeting accuracy requirements. Takes no arguments. If no new data was available, previous data will remain if present and valid will remain true. If new data was present but did not meet accuracy requirements, previous data is destroyed and valid is false.
   
-Updates GPS data. Returns true if data was updated, or false if data was not updated, either due to no new data being available or due to new data not meeting accuracy requirements. Takes no arguments. If no new data was available, previous data will remain if present and valid will remain true. If new data was present but did not meet accuracy requirements, previous data is destroyed and valid is false.
-  
-  ```cpp
+* ```cpp
   boolean valid;
   ```
   
   Boolean variable indicating whether data is valid. If data is valid, this is true. If data is invalid, this is false.
   
-  ```cpp
+* ```cpp
   double latitude;
   double longitude;
   double altitude;
