@@ -1,11 +1,19 @@
 #include <DFRduino_GPS.h>
 
-//Create an instance of the GPS Shield
-//Arguments are (double <minimum horizontal accuracy>, double <minimum vertical accuracy>)
-//Accuracies are in meters
-DFRduino_GPS gps(10.0, 10.0);
+/*
+ * Create an instance of the GPS Shield
+ * Arguments are (int receive_pin, int transmit_pin)
+ * Uses software serial so ensure pins support pin change interrupts
+ */
+DFRduino_GPS gps(10, 11);
 
 void setup() {
+  /*
+   * Initialize GPS
+   * Arguments are (double horizontal_accuracy, double vertical_accuracy)
+   * representing minimum accuracy (in meters) that will be considered valid
+   */
+  gps.begin(10.0, 10.0);
   Serial.begin(9600);
 }
 

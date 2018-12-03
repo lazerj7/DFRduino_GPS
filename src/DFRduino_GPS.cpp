@@ -9,104 +9,86 @@
  * Parsing NMEA/GPS messages is just a memory intensive process
  */
 
-#define I2C_CLOCK 100000
-#define ADDR 0x42
+#define BAUD_RATE 115200
 
 #include "DFRduino_GPS.h"
 
 /***************************************************************************************
- * Constructor                                                                         *
+ * Initializer                                                                         *
  * horizAcc is minimum reported horizontal accuracy that will be reported as valid fix *
  * vertAcc is minimum reported vertical accuracy that will be reported as valid fix    *
  ***************************************************************************************/
-DFRduino_GPS::DFRduino_GPS(double horizAcc, double vertAcc) {
+void DFRduino_GPS::begin(double horizAcc, double vertAcc) {
 	valid = false; //no valid data yet
 	_horizAcc = horizAcc; //store min horizontal accuracy
 	_vertAcc = vertAcc;  //stor min vertical accuracy
 
 	int i; //counter
 
-	Wire.begin(); //initialize I2C
-	Wire.setClock(I2C_CLOCK); //set I2C clock
+	_serial.begin(BAUD_RATE);
+	_serial.listen();
 
+	//TODO fix config messages
 	//GPS Configuration Messages
 	//To save SRAM (because these are huge, again, stupid GPS)
 	//Store these in progmem (flash)
 //----------------------------------------------------------------------------------------------------//
-	uint8_t ubxEnable[28] PROGMEM = {0xB5,0x62,0x06,0x00,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x07,0x00,0x01,0x00,0x02,0x00,0x00,0x00,0x24,0x8E}; //Enable only UBX messages over I2C and set extended timeout
+	const static uint8_t ubxEnable[28] PROGMEM = {0xB5,0x62,0x06,0x00,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x07,0x00,0x01,0x00,0x02,0x00,0x00,0x00,0x24,0x8E}; //Enable only UBX messages over I2C and set extended timeout
 
-	uint8_t ubx00Enable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x01,0x31}; //Enable UBX 00 Message (The only one we'll use)
+	const static uint8_t ubx00Enable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x01,0x31}; //Enable UBX 00 Message (The only one we'll use)
 	
-	uint8_t ubx01Disable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x32}; //Disable UBX 01 Message
+	const static uint8_t ubx01Disable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x32}; //Disable UBX 01 Message
 
-	uint8_t ubx03Disable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x03,0x40}; //Disable UBX 03 Message
+	const static uint8_t ubx03Disable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x03,0x40}; //Disable UBX 03 Message
 
-	uint8_t ubx04Disable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x47}; //Disable UBX 04 Message
+	const static uint8_t ubx04Disable[16] PROGMEM = {0xB5,0x62,0x06,0x01,0x08,0x00,0xF1,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x47}; //Disable UBX 04 Message
 	
-	uint8_t fullPower[16] PROGMEM = {0xB5,0x62,0x06,0x86,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x94,0x5A}; //Set Module to Full Power
+	const static uint8_t fullPower[16] PROGMEM = {0xB5,0x62,0x06,0x86,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x94,0x5A}; //Set Module to Full Power
 
-	uint8_t continuousMode[10] PROGMEM = {0xB5,0x62,0x06,0x11,0x02,0x00,0x08,0x00,0x21,0x91}; //Set Module to Continuous Mode
+	const static uint8_t continuousMode[10] PROGMEM = {0xB5,0x62,0x06,0x11,0x02,0x00,0x08,0x00,0x21,0x91}; //Set Module to Continuous Mode
 
-	uint8_t portable3d[44] PROGMEM = {0xB5,0x62,0x06,0x24,0x24,0x00,0xFF,0xFF,0x00,0x02,0x00,0x00,0x00,0x00,0x10,0x27,0x00,0x00,0x05,0x00,0xFA,0x00,0xFA,0x00,0x64,0x00,0x2C,0x01,0x00,0x00,0x00,0x00,0x10,0x27,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x46,0xEE}; //Set module to portable nav mode with 3d fix only
+	const static uint8_t portable3d[44] PROGMEM = {0xB5,0x62,0x06,0x24,0x24,0x00,0xFF,0xFF,0x00,0x02,0x00,0x00,0x00,0x00,0x10,0x27,0x00,0x00,0x05,0x00,0xFA,0x00,0xFA,0x00,0x64,0x00,0x2C,0x01,0x00,0x00,0x00,0x00,0x10,0x27,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x46,0xEE}; //Set module to portable nav mode with 3d fix only
 
-	uint8_t rate[14] PROGMEM {0xB5,0x62,0x06,0x08,0x06,0x00,0x33,0x00,0x01,0x00,0x01,0x00,0x49,0xEC}; //set refresh rate to 19.61Hz (Maximum for device)
+	const static uint8_t rate[14] PROGMEM {0xB5,0x62,0x06,0x08,0x06,0x00,0x33,0x00,0x01,0x00,0x01,0x00,0x49,0xEC}; //set refresh rate to 19.61Hz (Maximum for device)
 //----------------------------------------------------------------------------------------------------//
 
 	//Send Configuration Messages
 //---------------------------------------------------------------------------------------------------//
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 28; i++) {
-		Wire.write(pgm_read_byte_near(ubxEnable + i));
+		_serial.write(pgm_read_byte((ubxEnable + i)));
 	}
-	Wire.endTransmission();
 	
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 16; i++) {
-		Wire.write(pgm_read_byte_near(ubx00Enable + i));
+		_serial.write(pgm_read_byte_near(ubx00Enable + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 16; i++) {
-		Wire.write(pgm_read_byte_near(ubx01Disable + i));
+		_serial.write(pgm_read_byte_near(ubx01Disable + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 16; i++) {
-		Wire.write(pgm_read_byte_near(ubx03Disable + i));
+		_serial.write(pgm_read_byte_near(ubx03Disable + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 16; i++) {
-		Wire.write(pgm_read_byte_near(ubx04Disable + i));
+		_serial.write(pgm_read_byte_near(ubx04Disable + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 16; i++) {
-		Wire.write(pgm_read_byte_near(fullPower + i));
+		_serial.write(pgm_read_byte_near(fullPower + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 10; i++) {
-		Wire.write(pgm_read_byte_near(continuousMode + i));
+		_serial.write(pgm_read_byte_near(continuousMode + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 44; i++) {
-		Wire.write(pgm_read_byte_near(portable3d + i));
+		_serial.write(pgm_read_byte_near(portable3d + i));
 	}
-	Wire.endTransmission();
 
-	Wire.beginTransmission(ADDR);
 	for(i = 0; i < 14; i++) {
-		Wire.write(pgm_read_byte_near(rate + i));
+		_serial.write(pgm_read_byte_near(rate + i));
 	}
-	Wire.endTransmission();
 //----------------------------------------------------------------------------------------------------//
 }
 
@@ -116,54 +98,29 @@ DFRduino_GPS::DFRduino_GPS(double horizAcc, double vertAcc) {
  ************************************************/
 boolean DFRduino_GPS::update() {
 	char buffer[150]; //message buffer
-	char message[8] PROGMEM = {'$','P','U','B','X',',','0','0'}; //message identifier we're looking for
-	uint16_t available; //number of bytes available in receiver buffer
+	const static char message[8] PROGMEM = {'$','P','U','B','X',',','0','0'}; //message identifier we're looking for
 	int i; //counter
 	buffer[7] = '\0';  //initialize 8th character in buffer to null (We'll check this later)
 
-	//get how many bytes available from reveiver
-	Wire.beginTransmission(ADDR);
-	Wire.write(0xFD);
-	Wire.endTransmission();
-	Wire.requestFrom(ADDR, 2);
-	available = ((uint16_t) Wire.read()) << 8;
-	available |= ((uint16_t) Wire.read());
-
 	//if nothing available, just return false
 	//We will still consider previous valid data (if it exists) to be valid
-	if (available == 0) {
+	if (!(_serial.available())) {
 		return false;
 	}
 
 	//Loop through every darn byte available
-	while(available) {
+	while(_serial.available()) {
 		i = 0;
-		
-		//Written for 32 byte I2C buffer
-		//Buffer was increased to 44 bytes in header, but we didn't see a need to change this
-		//continously fills I2C buffer with 32 bytes in each iteration until we have read
-		//everything
-		if (available < 32) {
-			Wire.requestFrom(ADDR, (int) available);
-			available = 0;
-		}
-		else {
-			Wire.requestFrom(ADDR, 32);
-			available -= 32;
-		}
 
-		//While we have data in I2C buffer
-		//reads that data and compares it byte by byte to our target message
+		//Read data and compares it byte by byte to our target message
 		//if we get a message call _fill() to fill the buffer with the message
 		//contents, and then keep looping in case there is a more recent message
-		while(Wire.available()) {
-			buffer[i] = Wire.read();
-			if (buffer[i] == (pgm_read_byte_near(message + i))) {
-				i++;
-			}
-			if (i == 7) {
-				_fill(buffer, &available);
-			}
+		buffer[i] = _serial.read();
+		if (buffer[i] == (pgm_read_byte_near(message + i))) {
+			i++;
+		}
+		if (i == 7) {
+			_fill(buffer);
 		}
 	}
 	
@@ -196,29 +153,21 @@ boolean DFRduino_GPS::update() {
 /*********************************************
  * Function to fill buffer with Message data *
  *********************************************/
-void DFRduino_GPS::_fill(char* buffer, uint16_t* available) {
+void DFRduino_GPS::_fill(char* buffer) {
 	int i = 7; //start counting at the 8th value of the buffer
 
 	//messages all end with a carriage return and a line feed
 	//we want to read everything up to that carriage return
-	//Again here we continuously fill the I2C buffer with 32 bytes
-	//Didn't see a need to up it to 44 even though that is now possible
+	//if for some reason we run out of data before that carriage return
+	//something went wrong, so set the 8th byte of the buffer to null
+	//so that update() knows we failed
 	while (buffer[i] != '\r') {
 		i++;
-		if (Wire.available()) {
-			buffer[i] = Wire.read();
+		if (_serial.available()) {
+			buffer[i] = _serial.read();
 		}
 		else {
-			if (*available < 32) {
-				Wire.requestFrom(ADDR, (int) available);
-				*available = 0;
-				buffer[i] = Wire.read();
-			}
-			else {
-				Wire.requestFrom(ADDR, 32);
-				*available -= 32;
-				buffer[i] = Wire.read();
-			}
+			buffer[7] = '\0';
 		}
 	}
 	
@@ -362,9 +311,7 @@ boolean DFRduino_GPS::_parse(char* buffer) {
 		return false;
 	}
 
-	//TODO remove below
 	horizontalAccuracy = number;
-	//TODO remove above
 
 	//Third and final validity check, parse vertical accuracy into double and compare
 	//it to our minimum vertical accuracy value. If data is not accurate enough,
@@ -389,9 +336,7 @@ boolean DFRduino_GPS::_parse(char* buffer) {
 		return false;
 	}
 
-	//TODO remove below
 	verticalAccuracy = number;
-	//TODO remove above
 
 	//Parse ground speed into double and store it
 	i = 1;
@@ -447,6 +392,7 @@ boolean DFRduino_GPS::_parse(char* buffer) {
 		}
 		else {
 			number -= (double) (((uint8_t) buffer[j]) - 0x30);
+		}
 		i++;
 	}
 

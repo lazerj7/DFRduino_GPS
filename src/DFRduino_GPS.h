@@ -10,18 +10,16 @@
 #define DFRduino_GPS_h
 
 #include "Arduino.h"
-#include "Wire.h"
+#include "SoftwareSerial.h"
 #include "avr/pgmspace.h"
 
-//Increase I2C buffer to 44 bytes because config messages are long.....
-#undef BUFFER_LENGTH
-#define BUFFER_LENGTH 44
-#undef TWI_BUFFER_LENGTH
-#define TWI_BUFFER_LENGTH 44
+#undef _SS_MAX_RX_BUFF
+#define _SS_MAX_RX_BUFF 600
 
 class DFRduino_GPS {
 	public:
-		DFRduino_GPS(double horizAcc, double vertAcc);
+		DFRduino_GPS(uint8_t rxPin = 10, uint8_t txPin = 11) : _serial(rxPin, txPin) {};
+		void begin(double horizAcc, double vertACC);
 		boolean update();
 		boolean valid;
 		double latitude;
@@ -30,15 +28,14 @@ class DFRduino_GPS {
 		double groundSpeed;
 		double heading;
 		double verticalVelocity;
-		//TODO remove below
 		double horizontalAccuracy;
 		double verticalAccuracy;
-		//TODO remove above
 	private:
-		void _fill(char* buffer, uint16_t* available);
+		void _fill(char* buffer);
 		boolean _parse(char* data);
 		double _horizAcc;
 		double _vertAcc;
+		SoftwareSerial _serial;
 
 };
 
