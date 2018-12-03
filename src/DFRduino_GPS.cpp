@@ -300,18 +300,33 @@ boolean DFRduino_GPS::_parse(char* buffer) {
 
 	//parse altitude into double and update it
 	i = 1;
-	number = (double) (((uint8_t) buffer[++j]) - 0x30);
+	if (buffer[++j] == '-') {
+		number = -1.0 * ((double) (((uint8_t) buffer[++j]) - 0x30));
+	}
+	else {
+		number = (double) (((uint8_t) buffer[j]) - 0x30);
+	}
 
 	while(buffer[++j] != '.') {
 		number *= pow(10, i);
-		number += (double) (((uint8_t) buffer[j]) - 0x30);
+		if(number >= 0.0) {
+			number += (double) (((uint8_t) buffer[j]) - 0x30);
+		}
+		else {
+			number -= (double) (((uint8_t) buffer[j]) - 0x30);
+		}
 		i++;
 	}
 
 	i = -1;
 
 	while(buffer[++j] != ',') {
-		number += (pow(10, i)) * ((double) (((uint8_t) buffer[j]) - 0x30));
+		if(number >= 0.0) {
+			number += (pow(10, i)) * ((double) (((uint8_t) buffer[j]) - 0x30));
+		}
+		else {
+			number -= (pow(10, i)) * ((double) (((uint8_t) buffer[j]) - 0x30));
+		}
 		i--;
 	}
 
@@ -415,6 +430,39 @@ boolean DFRduino_GPS::_parse(char* buffer) {
 	}
 
 	heading = number;
+
+	//Parse vertical velocity into double and store it
+	i = 1;
+	if(buffer[++j] == '-') {
+		number = -1.0 * ((double) (((uint8_t) buffer[++j]) - 0x30));
+	}
+	else {
+		number = (double) (((uint8_t) buffer[j]) - 0x30);
+	}
+
+	while(buffer[++j] != '.') {
+		number *= pow(10, i);
+		if(number >= 0.0) {
+			number += (double) (((uint8_t) buffer[j]) - 0x30);
+		}
+		else {
+			number -= (double) (((uint8_t) buffer[j]) - 0x30);
+		i++;
+	}
+
+	i = -1;
+
+	while(buffer[++j] != ',') {
+		if(number >= 0.0) {
+			number += (pow(10, i)) * ((double) (((uint8_t) buffer[j]) - 0x30));
+		}
+		else {
+			number -= (pow(10, i)) * ((double) (((uint8_t) buffer[j]) - 0x30));
+		}
+		i--;
+	}
+
+	verticalVelocity = number;
 
 	//We parsed all or our data, and if we made it here it is valid,
 	//so return true
