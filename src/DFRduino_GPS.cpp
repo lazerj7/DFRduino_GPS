@@ -59,35 +59,35 @@ void DFRduino_GPS::begin(double horizAcc, double vertAcc) {
 	}
 	
 	for(i = 0; i < 16; i++) {
-		_serial.write(pgm_read_byte_near(ubx00Enable + i));
+		_serial.write(pgm_read_byte(ubx00Enable + i));
 	}
 
 	for(i = 0; i < 16; i++) {
-		_serial.write(pgm_read_byte_near(ubx01Disable + i));
+		_serial.write(pgm_read_byte(ubx01Disable + i));
 	}
 
 	for(i = 0; i < 16; i++) {
-		_serial.write(pgm_read_byte_near(ubx03Disable + i));
+		_serial.write(pgm_read_byte(ubx03Disable + i));
 	}
 
 	for(i = 0; i < 16; i++) {
-		_serial.write(pgm_read_byte_near(ubx04Disable + i));
+		_serial.write(pgm_read_byte(ubx04Disable + i));
 	}
 
 	for(i = 0; i < 16; i++) {
-		_serial.write(pgm_read_byte_near(fullPower + i));
+		_serial.write(pgm_read_byte(fullPower + i));
 	}
 
 	for(i = 0; i < 10; i++) {
-		_serial.write(pgm_read_byte_near(continuousMode + i));
+		_serial.write(pgm_read_byte(continuousMode + i));
 	}
 
 	for(i = 0; i < 44; i++) {
-		_serial.write(pgm_read_byte_near(portable3d + i));
+		_serial.write(pgm_read_byte(portable3d + i));
 	}
 
 	for(i = 0; i < 14; i++) {
-		_serial.write(pgm_read_byte_near(rate + i));
+		_serial.write(pgm_read_byte(rate + i));
 	}
 //----------------------------------------------------------------------------------------------------//
 }

@@ -112,11 +112,11 @@ This library interfaces an arduino with the DFRobot DFRduino LEA-5H GPS shield u
   DFRduino_GPS gps(10, 11);
    
   void setup() {
-  /*
-   * Initialize GPS
-   * Arguments are (double horizontal_accuracy, double vertical_accuracy)
-   * representing minimum accuracy (in meters) that will be considered valid
-   */
+       /*
+   	* Initialize GPS
+   	* Arguments are (double horizontal_accuracy, double vertical_accuracy)
+   	* representing minimum accuracy (in meters) that will be considered valid
+   	*/
   	gps.begin(10.0, 10.0);
   	Serial.begin(9600);
   }
